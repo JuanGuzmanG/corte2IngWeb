@@ -148,7 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cueAnt = $datosAnt['cuentaAtras'];
         $lleAnt = $datosAnt['llegaPedido'];
 
-        // Cuenta atrás
+        // Primero calculamos Cuenta Atrás porque se necesita para Inventario
+        // Cuenta atrás: =SI(H76>0;H76;SI(I76>0;I76-1;-1))
+        // H76 = llegaPedidoAnterior, I76 = cuentaAtrasAnterior
         if ($lleAnt > 0) {
             $cuentaAtras = $lleAnt;
         } else if ($cueAnt > 0) {
@@ -157,23 +159,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cuentaAtras = -1;
         }
 
-        // Inventario
+        // Inventario: =SI(D76>0;D76;0)-C77+SI(I77=0;$B$6;0)
+        // D76 = inventarioAnterior, C77 = demandaActual, I77 = cuentaAtrasActual, B6 = Q
         $invParaCalculo = $invAnt > 0 ? $invAnt : 0;
-        $addQ = $cuentaAtras === 0 ? $q : 0;
+        $addQ = ($cuentaAtras === 0) ? $q : 0;
         $inventario = $invParaCalculo - $demanda + $addQ;
 
-        // Costo inventario
-        $costoInv = $inventario > 0 ? $inventario * $costoAlmacenamiento : 0;
+        // Costo inventario: =SI(D78>0;D78*$B$10;0)
+        // D78 = inventarioActual, B10 = costoAlmacenamiento
+        $costoInv = ($inventario > 0) ? ($inventario * $costoAlmacenamiento) : 0;
         $totalCI += $costoInv;
 
-        // Costo ordenar
+        // Costo ordenar: =SI(Y(D77<=R;I77<=0);$B$8;0)
+        // D77 = inventarioActual, I77 = cuentaAtrasActual, B8 = costoPedido
         $costoOrd = 0;
         if ($inventario <= $r && $cuentaAtras <= 0) {
             $costoOrd = $costoPedido;
         }
         $totalCO += $costoOrd;
 
-        // Azar 2
+        // Azar 2: =SI(F77>0;AZAR2;-1)
+        // F77 = costoOrdenar
         $az2Val = '';
         $az2Num = -1;
         if ($costoOrd > 0) {
@@ -183,14 +189,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $az2Val = '-1';
         }
 
-        // Llega pedido
+        // Llega pedido: busca en la tabla de tiempo de entrega usando azar2
         $llegaPedido = 0;
         if ($az2Num > 0) {
             $llegaPedido = buscarValorEnRango($az2Num, $dias, $rangosEntrega);
         }
 
-        // Costo pérdida prestigio
-        $costoPres = $inventario < 0 ? $inventario * $costoPerdida * -1 : 0;
+        // Costo pérdida prestigio: =SI(D77<0;D77*$B$9*-1;"")
+        // D77 = inventarioActual, B9 = costoPerdida
+        $costoPres = ($inventario < 0) ? ($inventario * $costoPerdida * -1) : 0;
         $totalCP += $costoPres;
 
         $datosCompletos[] = [
