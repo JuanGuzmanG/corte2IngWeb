@@ -182,49 +182,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 $datosAnt = $datosCompletos[$i - 1];
                 $invAnt = $datosAnt['inventario'];
                 $cueAnt = $datosAnt['cuentaAtras'];
-                $lleAnt = $datosAnt['llegaPedido'];
 
-                // Calcular cuenta atrás
-                if ($lleAnt > 0) {
-                    $cue = $lleAnt;
-                } elseif ($cueAnt > 0) {
-                    $cue = $cueAnt - 1;
-                } else {
-                    $cue = -1;
-                }
+                // Verificar si llega un pedido HOY (cuando cuenta atrás = 0)
+                $llegaHoy = ($cueAnt == 0) ? $q : 0;
 
-                // Calcular inventario
-                $invPos = $invAnt > 0 ? $invAnt : 0;
-                $addQ = ($cue === 0) ? $q : 0;
-                $inv = $invPos - $dem + $addQ;
+                // Calcular inventario DESPUÉS de recibir pedido y satisfacer demanda
+                $invDespuesLlegada = $invAnt + $llegaHoy;
+                $inv = $invDespuesLlegada - $dem;
 
-                // Costo de inventario
-                $costoInv = ($inv > 0) ? $inv * $cAlm : 0;
-                $totalCI += $costoInv;
+                // Actualizar cuenta atrás ANTES de verificar si se ordena
+                $cue = ($cueAnt > 0) ? $cueAnt - 1 : -1;
 
-                // Costo de ordenar
+                // Verificar si se debe hacer un pedido
                 $costoOrd = 0;
+                $az2Val = '';
+                $lle = 0;
+
+                // Se hace pedido si: inventario <= R Y NO hay pedido pendiente
                 if ($inv <= $r && $cue <= 0) {
                     $costoOrd = $cPed;
-                }
-                $totalCO += $costoOrd;
-
-                // Azar 2 y llegada de pedido
-                $az2Val = '';
-                $az2Num = -1;
-                if ($costoOrd > 0) {
                     $az2Val = number_format($azares2[$i]['valor'], 3, '.', '');
-                    $az2Num = $azares2[$i]['valor'];
+                    $lle = buscarValor($azares2[$i]['valor'], $dias, $rangosTiempo);
+                    $cue = $lle; // Iniciar cuenta atrás
                 } else {
                     $az2Val = '-1';
                 }
 
-                $lle = 0;
-                if ($az2Num > 0) {
-                    $lle = buscarValor($az2Num, $dias, $rangosTiempo);
-                }
+                // Costo de inventario (solo si hay inventario positivo)
+                $costoInv = ($inv > 0) ? $inv * $cAlm : 0;
+                $totalCI += $costoInv;
 
-                // Costo de pérdida de prestigio
+                // Costo de ordenar
+                $totalCO += $costoOrd;
+
+                // Costo de pérdida de prestigio (solo si inventario es negativo)
                 $costoPres = ($inv < 0) ? abs($inv) * $cPer : 0;
                 $totalCP += $costoPres;
 
@@ -436,14 +427,14 @@ $rangosTiempoVista = calcularRangosTiempo($prob_entrega_default);
             <?php if ($azares1 && $azares2): ?>
                 <div class="table-wrapper">
                     <table>
-                        <thead><tr><th>Fila</th><th>AZAR #1 X</th><th>AZAR #1</th><th>AZAR #2 Y</th><th>AZAR #2</th></tr></thead>
+                        <thead><tr><th>Fila</th><th>AZAR #1 X</th><th>AZAR #1</th><th>AZAR #2 X</th><th>AZAR #2</th></tr></thead>
                         <tbody>
                         <?php for ($i = 0; $i < 10; $i++): ?>
                             <tr>
                                 <td class="label-cell"><?php echo $i; ?></td>
                                 <td><input type="text" value="<?php echo floor($azares1[$i]['x']); ?>" readonly></td>
                                 <td><input type="text" value="<?php echo number_format($azares1[$i]['valor'], 8, '.', ''); ?>" readonly></td>
-                                <td><input type="text" value="<?php echo floor($azares2[$i]['y']); ?>" readonly></td>
+                                <td><input type="text" value="<?php echo floor($azares2[$i]['x']); ?>" readonly></td>
                                 <td><input type="text" value="<?php echo number_format($azares2[$i]['valor'], 5, '.', ''); ?>" readonly></td>
                             </tr>
                         <?php endfor; ?>
