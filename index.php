@@ -422,7 +422,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <td class="label-cell"><?= $d['dia'] ?></td>
                             <td><input type="text" value="<?= $d['azar1'] ?>" readonly></td>
                             <td><input type="text" value="<?= $d['demanda'] ?>" readonly></td>
-                            <td><input type="text" value="<?= number_format($d['inventario'], 2, '.', '') ?>" readonly></td>
+                            <td><input type="text" value="<?= number_format($d['inventario'], 2, '.', ',') ?>" readonly></td>
                             <td><input type="text" value="<?= formatoDinero($d['costoInv']) ?>" readonly></td>
                             <td><input type="text" value="<?= formatoDinero($d['costoOrd']) ?>" readonly></td>
                             <td><input type="text" value="<?= $d['azar2'] ?>" readonly></td>
