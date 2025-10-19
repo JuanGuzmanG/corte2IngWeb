@@ -18,11 +18,3 @@ EXPOSE 80
 
 # Iniciar Apache
 CMD ["apache2-foreground"]
-```
-
-## 📦 Archivo 3: `.dockerignore`
-```
-.git
-.gitignore
-README.md
-.env
