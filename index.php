@@ -170,44 +170,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 'costoOrd' => 0,
                 'azar2' => '',
                 'llegaPedido' => 0,
-                'cuentaAtras' => -1,
+                'cuentaAtras' => 0,
                 'costoPres' => 0
             ];
 
             // Calcular días 1 a 1000
             for ($i = 1; $i <= 1000; $i++) {
-                $az1 = $azares1[$i]['valor'];
-                $dem = buscarValor($az1, $unidades, $rangosDemanda);
-
+                // Obtener datos del día anterior
                 $datosAnt = $datosCompletos[$i - 1];
                 $invAnt = $datosAnt['inventario'];
                 $cueAnt = $datosAnt['cuentaAtras'];
 
-                // Verificar si llega un pedido HOY (cuando cuenta atrás = 0)
-                $llegaHoy = ($cueAnt == 0) ? $q : 0;
+                // 1. Decrementar cuenta atrás si existe
+                $cue = ($cueAnt > 0) ? $cueAnt - 1 : 0;
 
-                // Calcular inventario DESPUÉS de recibir pedido y satisfacer demanda
-                $invDespuesLlegada = $invAnt + $llegaHoy;
-                $inv = $invDespuesLlegada - $dem;
+                // 2. Verificar si llega pedido HOY (cuando cuenta atrás llega a 0)
+                $llegaHoy = 0;
+                if ($cueAnt > 0 && $cue == 0) {
+                    $llegaHoy = $q;
+                }
 
-                // Actualizar cuenta atrás ANTES de verificar si se ordena
-                $cue = ($cueAnt > 0) ? $cueAnt - 1 : -1;
+                // 3. Actualizar inventario con llegada de pedido
+                $invConLlegada = $invAnt + $llegaHoy;
 
-                // Verificar si se debe hacer un pedido
+                // 4. Generar demanda
+                $az1 = $azares1[$i]['valor'];
+                $dem = buscarValor($az1, $unidades, $rangosDemanda);
+
+                // 5. Satisfacer demanda
+                $inv = $invConLlegada - $dem;
+
+                // 6. Verificar si se debe hacer un nuevo pedido
                 $costoOrd = 0;
                 $az2Val = '';
                 $lle = 0;
 
                 // Se hace pedido si: inventario <= R Y NO hay pedido pendiente
-                if ($inv <= $r && $cue <= 0) {
+                if ($inv <= $r && $cue == 0) {
                     $costoOrd = $cPed;
                     $az2Val = number_format($azares2[$i]['valor'], 3, '.', '');
                     $lle = buscarValor($azares2[$i]['valor'], $dias, $rangosTiempo);
-                    $cue = $lle; // Iniciar cuenta atrás
+                    $cue = $lle; // Iniciar nueva cuenta atrás
                 } else {
-                    $az2Val = '-1';
+                    $az2Val = '';
                 }
 
+                // 7. Calcular costos
                 // Costo de inventario (solo si hay inventario positivo)
                 $costoInv = ($inv > 0) ? $inv * $cAlm : 0;
                 $totalCI += $costoInv;
