@@ -2,6 +2,8 @@
 
 Sistema web desarrollado en PHP para simular y gestionar inventarios utilizando el método de simulación Monte Carlo.
 
+link[https://corte2ingweb-production.up.railway.app/]
+
 ## Características
 
 - ✅ Generación de números aleatorios con método congruencial lineal
@@ -28,5 +30,3 @@ Sistema web desarrollado en PHP para simular y gestionar inventarios utilizando 
 docker build -t inventario .
 docker run -p 8080:80 inventario
 ```
-
-Abre: http://localhost:8080
