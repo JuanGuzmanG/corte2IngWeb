@@ -1,3 +1,8 @@
+<!--
+    juan jose guzman gomez
+    1108640973
+-->
+
 <?php
 function calcularRangos($probabilidades) {
     $rangos = [];
@@ -147,7 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $addQ = ($cuentaAtras == 0) ? $q : 0;
         $inventario = $invParaCalculo - $demanda + $addQ;
-        echo "$inventario";
         $costoInv = ($inventario > 0) ? ($inventario * $costoAlmacenamiento) : 0;
         $totalCI += $costoInv;
         $costoOrd = 0;
@@ -260,6 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="header">
         <h1>📊 Sistema de Gestión de Inventario</h1>
         <p>Administración de parámetros de inventario - PHP</p>
+        <p>JUAN JOSE GUZMAN GOMEZ - 1108640973</p>
     </div>
     <div class="content">
         <form method="POST">
