@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Función para calcular rangos
 function calcularRangos($probabilidades) {
     $rangos = [];
     $acumulado = 0;
@@ -14,7 +13,6 @@ function calcularRangos($probabilidades) {
     return $rangos;
 }
 
-// Función para buscar valor en rango
 function buscarValorEnRango($azar, $valores, $rangos) {
     for ($i = 0; $i < count($valores); $i++) {
         $min = $rangos[$i]['min'];
@@ -29,7 +27,6 @@ function buscarValorEnRango($azar, $valores, $rangos) {
     return 0;
 }
 
-// Función para generar números aleatorios
 function generarNumerosAleatorios($a, $x0, $b, $n, $cantidad = 1000) {
     $numeros = [];
     $vx = $x0;
@@ -46,13 +43,11 @@ function generarNumerosAleatorios($a, $x0, $b, $n, $cantidad = 1000) {
     return $numeros;
 }
 
-// Formato dinero
 function formatoDinero($valor) {
     if ($valor == 0) return '$0.00';
     return '$' . number_format($valor, 2, '.', ',');
 }
 
-// Procesar formulario
 $datos = null;
 $azares1 = null;
 $azares2 = null;
@@ -60,7 +55,6 @@ $datosCompletos = null;
 $totales = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Obtener datos del formulario
     $r = floatval($_POST['r']);
     $q = floatval($_POST['q']);
     $inventarioInicial = floatval($_POST['inventario_inicial']);
@@ -110,21 +104,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $b2 = floatval($_POST['b2']);
     $n2 = floatval($_POST['n2']);
 
-    // Calcular rangos
     $rangosDemanda = calcularRangos($probDemanda);
     $rangosEntrega = calcularRangos($probEntrega);
 
-    // Generar números aleatorios
     $azares1 = generarNumerosAleatorios($a, $x0, $b, $n, 1000);
     $azares2 = generarNumerosAleatorios($a2, $x0_2, $b2, $n2, 1000);
 
-    // Calcular datos
     $datosCompletos = [];
     $totalCI = 0;
     $totalCO = 0;
     $totalCP = 0;
 
-    // Fila 0
     $datosCompletos[] = [
         'dia' => 0,
         'azar1' => '',
@@ -138,8 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'costoPres' => 0
     ];
 
-    // Filas 1 a 999
-    for ($i = 1; $i < 1000; $i++) {
+    for ($i = 1; $i <= 1000; $i++) {
         $az1 = $azares1[$i]['valor'];
         $demanda = buscarValorEnRango($az1, $unidades, $rangosDemanda);
 
@@ -148,10 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cueAnt = $datosAnt['cuentaAtras'];
         $lleAnt = $datosAnt['llegaPedido'];
 
-        // PASO 1: Calcular Cuenta Atrás de la fila actual
-        // Fórmula: =SI(H76>0;H76;SI(I76>0;I76-1;-1))
-        // H76 = llegaPedidoAnterior (fila anterior)
-        // I76 = cuentaAtrasAnterior (fila anterior)
         if ($lleAnt > 0) {
             $cuentaAtras = $lleAnt;
         } else if ($cueAnt > 0) {
@@ -160,31 +145,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cuentaAtras = -1;
         }
 
-        // PASO 2: Calcular Inventario usando la cuenta atrás ACTUAL
-        // Fórmula: =SI(D76>0;D76;0)-C77+SI(I77=0;$B$6;0)
-        // D76 = inventarioAnterior (fila anterior)
-        // C77 = demandaActual (fila actual)
-        // I77 = cuentaAtrasActual (fila actual - recién calculada)
-        // B6 = Q
         $invParaCalculo = ($invAnt > 0) ? $invAnt : 0;
-        $addQ = ($cuentaAtras === 0) ? $q : 0;
-        $inventario = $invParaCalculo - $demanda + $addQ;
 
-        // PASO 3: Costo inventario
-        // Fórmula: =SI(D77>0;D77*$B$10;0)
+        $addQ = ($cuentaAtras == 0) ? $q : 0;
+        $inventario = $invParaCalculo - $demanda + $addQ;
+        echo "<script>console.log('Debug: " . $invParaCalculo . "');</script>";
         $costoInv = ($inventario > 0) ? ($inventario * $costoAlmacenamiento) : 0;
+        echo "<script>console.log('Debug: " . $costoInv . "');</script>";
         $totalCI += $costoInv;
 
-        // PASO 4: Costo ordenar
-        // Fórmula: =SI(Y(D77<=R;I77<=0);$B$8;0)
         $costoOrd = 0;
         if ($inventario <= $r && $cuentaAtras <= 0) {
             $costoOrd = $costoPedido;
         }
         $totalCO += $costoOrd;
 
-        // PASO 5: Azar 2
-        // Fórmula: =SI(F77>0;AZAR2_VALOR;-1)
         $az2Val = '';
         $az2Num = -1;
         if ($costoOrd > 0) {
@@ -194,14 +169,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $az2Val = '-1';
         }
 
-        // PASO 6: Llega pedido
         $llegaPedido = 0;
         if ($az2Num > 0) {
             $llegaPedido = buscarValorEnRango($az2Num, $dias, $rangosEntrega);
         }
 
-        // PASO 7: Costo pérdida prestigio
-        // Fórmula: =SI(D77<0;D77*$B$9*-1;"")
         $costoPres = ($inventario < 0) ? ($inventario * $costoPerdida * -1) : 0;
         $totalCP += $costoPres;
 
@@ -241,7 +213,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'rangosEntrega' => $rangosEntrega
     ];
 } else {
-    // Valores por defecto
     $datos = [
         'r' => 81,
         'q' => 106,
