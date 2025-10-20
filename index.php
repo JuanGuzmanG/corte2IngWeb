@@ -1,6 +1,4 @@
 <?php
-session_start();
-
 function calcularRangos($probabilidades) {
     $rangos = [];
     $acumulado = 0;
@@ -128,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'costoPres' => 0
     ];
 
-    for ($i = 1; $i <= 1000; $i++) {
+    for ($i = 1; $i < 1000; $i++) {
         $az1 = $azares1[$i]['valor'];
         $demanda = buscarValorEnRango($az1, $unidades, $rangosDemanda);
 
@@ -149,9 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $addQ = ($cuentaAtras == 0) ? $q : 0;
         $inventario = $invParaCalculo - $demanda + $addQ;
-        echo "<script>console.log('Debug: " . $invParaCalculo . "');</script>";
         $costoInv = ($inventario > 0) ? ($inventario * $costoAlmacenamiento) : 0;
-        echo "<script>console.log('Debug: " . $costoInv . "');</script>";
         $totalCI += $costoInv;
 
         $costoOrd = 0;
