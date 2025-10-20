@@ -105,8 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rangosDemanda = calcularRangos($probDemanda);
     $rangosEntrega = calcularRangos($probEntrega);
 
-    $azares1 = generarNumerosAleatorios($a, $x0, $b, $n, 1000);
-    $azares2 = generarNumerosAleatorios($a2, $x0_2, $b2, $n2, 1000);
+    $azares1 = generarNumerosAleatorios($a, $x0, $b, $n, 1001);
+    $azares2 = generarNumerosAleatorios($a2, $x0_2, $b2, $n2, 1001);
 
     $datosCompletos = [];
     $totalCI = 0;
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'costoPres' => 0
     ];
 
-    for ($i = 1; $i < 1000; $i++) {
+    for ($i = 1; $i <= 1000; $i++) {
         $az1 = $azares1[$i]['valor'];
         $demanda = buscarValorEnRango($az1, $unidades, $rangosDemanda);
 
@@ -147,9 +147,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $addQ = ($cuentaAtras == 0) ? $q : 0;
         $inventario = $invParaCalculo - $demanda + $addQ;
+        echo "$inventario";
         $costoInv = ($inventario > 0) ? ($inventario * $costoAlmacenamiento) : 0;
         $totalCI += $costoInv;
-
         $costoOrd = 0;
         if ($inventario <= $r && $cuentaAtras <= 0) {
             $costoOrd = $costoPedido;
